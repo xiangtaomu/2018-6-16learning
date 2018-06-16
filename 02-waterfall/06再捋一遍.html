@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>封装jquery插件</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			font-family: "Microsoft Yahei";
+		}
+
+		.box {
+			position: relative;
+			width: 1200px;
+			margin: 0 auto;
+		}
+
+		.item {
+			border: 1px solid #000;
+			width: 232px;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+			overflow: hidden;
+			/* float: left; */
+			position: absolute;
+			top: 0;
+			left: 0;
+		}
+
+		.item>img {
+			width: 100%;
+			display: block;
+		}
+
+		.item>p {
+			margin: 0;
+			padding: 10px;
+			background: #eee;
+		}
+
+		.btn {
+			width: 280px;
+			height: 40px;
+			margin: 30px auto;
+			text-align: center;
+			line-height: 40px;
+			background-color: #CCC;
+			border-radius: 6px;
+			font-size: 24px;
+			cursor: pointer;
+		}
+
+		.loading {
+			background-color: transparent;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="box">
+
+
+	</div>
+
+	<div class="btn">加载更多</div>
+	<script src="js/jquery-1.12.4.js"></script>
+	<script src="js/06-waterfall.js"></script>
+	<script src="js/template-web.js"></script>
+	<script type="text/html" id="tpl">
+		{{each items v i}}
+		<div class="item">
+			<img src="{{v.path}}" width="{{v.width}}" height="{{v.height}}" alt="">
+			<p>{{v.text}}</p>
+		</div>
+		{{/each}}
+	</script>
+	<script>
+		var page = 1;
+		var pageSize = 20;
+
+		function render() {
+			$.ajax({
+				type: "get",
+				url: "data.php",
+				dataType: "json",
+				data: {
+					page: page,
+					pageSize: pageSize
+				},
+				beforeSend: function () {
+					if($(".btn").hasClass("loading")){
+						return false;
+					}
+					$(".btn").text("加载中").addClass("loading");
+
+				},
+				success: function (info) {
+					// console.log(info);
+					if (info.items.length === 0) {
+						$(".btn").text("没有更过图片了");
+						return;
+					}
+					var html = template("tpl", info);
+					$(".box").append(html);
+					$(".box").waterfall();
+					$(".btn").text("加载更多").removeClass("loading");
+					page = info.page;
+				}
+			})
+		};
+		render(); 
+		// 1-点击触发
+		$(".btn").on("click",function(){
+			render();
+		})
+
+		//2-滚轮滚动触发
+		$(window).on("scroll", function () {
+			var pageHeight = $(window).height();
+			var scrollTop = $(window).scrollTop();
+			var offsetTop = $(".item:last").offset().top;
+			console.log(offsetTop)
+			if ((pageHeight + scrollTop) >= offsetTop) {
+				render();
+			}
+		})
+	</script>
+
+
+
+</body>
+
+</html>
